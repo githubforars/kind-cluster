@@ -21,10 +21,13 @@ def deployApp(c):
     local('./kubectl apply -f https://kind.sigs.k8s.io/examples/ingress/usage.yaml')
 
 @task
-def installHelm(c):
+def installHelmKubectl(c):
     local('curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3')
     local('chmod 700 get_helm.sh')
     local('./get_helm.sh')
+    local('curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/darwin/amd64/kubectl"')
+    local('chmod +x ./kubectl')
+
 
 @task
 def deployNginxIngress(c):
@@ -33,13 +36,14 @@ def deployNginxIngress(c):
   --namespace ingress-nginx --create-namespace --set controller.metrics.enabled=true \
 --set-string controller.podAnnotations."prometheus\.io/scrape"="true" \
 --set-string controller.podAnnotations."prometheus\.io/port"="10254" \
--f /Users/senthil.ar/Documents/hypen/nginx_ingress_values.yaml')
+-f ./nginx_ingress_values.yaml')
     local('./kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=90s')
 
 @task
 def deployPrometheus(c):
-    local('/Users/senthil.ar/Documents/hypen/kubectl apply --kustomize github.com/kubernetes/ingress-nginx/deploy/prometheus/')
+    local('./kubectl apply --kustomize github.com/kubernetes/ingress-nginx/deploy/prometheus/')
     local('./kubectl apply -f ./prometheus_ingress.yaml')
+    local('sleep 10')
 
 
 @task
@@ -47,6 +51,8 @@ def loadTest(c,uri):
     li=list(uri.split(','))
     for i in li:
       local("ab -n 100 -c 10 http://localhost/"+i)
+      ## sleeping for some time because less local resource
+      time.sleep(5)
 
 @task
 def promtocsv(c, promUrl, filename, quries):
@@ -84,12 +90,12 @@ def assessment(c, uriList='', promUrl='', filename='', quries=''):
   print("###################  Creating kind cluster ############################")
   time.sleep(2)
   createCluster(c)
-  print("###################  Deploying the foo/bar ########################### ")
+  print("###################  Installing helm binary ########################### ")
+  time.sleep(2)
+  installHelmKubectl(c)
+  print("###################  Deploying the foo/bar  ##########################")
   time.sleep(2)
   deployApp(c)
-  print("###################  Installing helm binary  ##########################")
-  time.sleep(2)
-  installHelm(c)
   print("##################  Deploying Nginx ingress  ##########################")
   time.sleep(2)
   deployNginxIngress(c)

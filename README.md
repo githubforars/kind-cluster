@@ -52,7 +52,7 @@ fab promtocsv 'http://localhost' 'cpu.csv' 'rate(nginx_ingress_controller_nginx_
 fab assessment  --uriList='foo,bar' --promUrl='http://localhost' --filename='cpu.csv' --quries='sum(rate(nginx_ingress_controller_nginx_process_cpu_seconds_total[5m]))'
 
 where
---uriList -> the service endpoint of deployed apps to perticipate on load test.
+--uriList -> the service endpoint of deployed apps to participate on load test.
 --promUrl -> prometheus url.
 --filename -> filename for output csv to be written
 --quries -> support single query

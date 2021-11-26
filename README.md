@@ -3,6 +3,8 @@
 `python3`
 `fabric`
 
+#### Disclaimer: The script is tested for MAC system. kubectl binary may not work for linux.
+
 
 ```
 pip install fabric==2.5.0  csv requests
